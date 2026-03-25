@@ -1,3 +1,4 @@
+import re
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -103,13 +104,26 @@ def register():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        if User.query.filter_by(username=username).first():
-            flash('Username taken.')
+        
+        # --- PROFESSIONAL VALIDATION START ---
+        # Rule: Min 6 chars, 1 Upper, 1 Lower, 1 Number, 1 Special
+        pattern = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
+        
+        if not re.match(pattern, username):
+            flash('Username must be 6+ chars with A-Z, a-z, 0-9 & special char!', 'danger')
             return redirect(url_for('register'))
+        # --- PROFESSIONAL VALIDATION END ---
+
+        if User.query.filter_by(username=username).first():
+            flash('Username already taken.', 'warning')
+            return redirect(url_for('register'))
+            
         new_user = User(username=username, password=generate_password_hash(password))
         db.session.add(new_user)
         db.session.commit()
+        flash('Registration successful! Please login.', 'success')
         return redirect(url_for('login'))
+        
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])

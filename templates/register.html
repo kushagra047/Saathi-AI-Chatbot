@@ -17,6 +17,11 @@
         .links a { color: #10A37F; text-decoration: none; }
         .links a:hover { text-decoration: underline; }
         .flash-msg { background-color: #ff6b6b; color: white; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 14px; }
+        
+        /* Added: Requirement Checklist Styling */
+        .req-list { list-style: none; padding: 10px; margin: 5px 0; background: #2a2b32; border-radius: 5px; font-size: 12px; border: 1px solid #444; }
+        .req-item { color: #ff6b6b; margin-bottom: 3px; transition: 0.3s; }
+        .req-item.valid { color: #10A37F; }
     </style>
 </head>
 <body>
@@ -35,19 +40,53 @@
     <form method="POST" action="/register">
         <div class="input-group">
             <label>Username</label>
-            <input type="text" name="username" required>
+            <input type="text" name="username" id="username" required autocomplete="off">
+            
+            <ul class="req-list" id="requirements">
+                <li id="len" class="req-item">❌ Min 6 Characters</li>
+                <li id="upper" class="req-item">❌ One Uppercase (A-Z)</li>
+                <li id="lower" class="req-item">❌ One Lowercase (a-z)</li>
+                <li id="num" class="req-item">❌ One Number (0-9)</li>
+                <li id="special" class="req-item">❌ One Special Char (@$!%*?&)</li>
+            </ul>
         </div>
         <div class="input-group">
             <label>Password</label>
             <input type="password" name="password" required>
         </div>
-        <button type="submit">Sign Up</button>
+        <button type="submit" id="submitBtn">Sign Up</button>
     </form>
     
     <div class="links">
         Already have an account? <a href="/login">Login here</a>
     </div>
 </div>
+
+<script>
+    const userInp = document.getElementById('username');
+    
+    userInp.addEventListener('input', () => {
+        const val = userInp.value;
+        
+        // Validation Checks
+        updateStatus('len', val.length >= 6);
+        updateStatus('upper', /[A-Z]/.test(val));
+        updateStatus('lower', /[a-z]/.test(val));
+        updateStatus('num', /[0-9]/.test(val));
+        updateStatus('special', /[@$!%*?&]/.test(val));
+    });
+
+    function updateStatus(id, isValid) {
+        const el = document.getElementById(id);
+        if (isValid) {
+            el.classList.add('valid');
+            el.innerText = el.innerText.replace('❌', '✔');
+        } else {
+            el.classList.remove('valid');
+            el.innerText = el.innerText.replace('✔', '❌');
+        }
+    }
+</script>
 
 </body>
 </html>
