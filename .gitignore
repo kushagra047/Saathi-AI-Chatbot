@@ -1,0 +1,21 @@
+# Database aur Security (Bohot Zaroori)
+.env
+*.db
+instance/
+
+# Python ki temporary files
+__pycache__/
+*.pyc
+
+# Environment aur Libraries
+venv/
+env/
+.venv/
+
+# IDE settings
+.vscode/
+.idea/
+
+# OS ki faltu files
+.DS_Store
+Thumbs.db

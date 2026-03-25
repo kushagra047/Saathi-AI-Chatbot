@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saathi - Mental Health Companion</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e9ecef; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; height: 90vh; }
+        .chat-container { width: 100%; max-width: 450px; background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; height: 85vh; }
+        .header { background: #2e7d32; color: white; padding: 20px; text-align: center; font-size: 1.3em; font-weight: bold; letter-spacing: 1px; }
+        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background-color: #fcfcfc; }
+        .message { max-width: 80%; padding: 12px 16px; border-radius: 20px; line-height: 1.4; font-size: 0.95em; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .bot-msg { background: #ffffff; color: #333; align-self: flex-start; border: 1px solid #e0e0e0; border-bottom-left-radius: 5px; }
+        .user-msg { background: #2e7d32; color: white; align-self: flex-end; border-bottom-right-radius: 5px; }
+        
+        /* MOOD BOARD CSS */
+        .mood-board { background: #e8f5e9; padding: 15px; border-radius: 15px; text-align: center; margin-top: 10px; border: 1px solid #c8e6c9; animation: fadeIn 0.5s; }
+        .mood-board p { margin: 0 0 10px 0; color: #2e7d32; font-weight: bold; }
+        .emojis { display: flex; justify-content: space-around; font-size: 2em; }
+        .emojis span { cursor: pointer; transition: transform 0.2s; }
+        .emojis span:hover { transform: scale(1.3); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .input-area { display: flex; padding: 15px; border-top: 1px solid #eee; background: #fff; }
+        input[type="text"] { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 25px; outline: none; font-size: 0.95em; background: #f9f9f9; }
+        button { background: #2e7d32; color: white; border: none; padding: 12px 20px; margin-left: 10px; border-radius: 25px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background: #1b5e20; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="header">🌿 Saathi</div>
+    <div class="chat-box" id="chat-box">
+        <div class="message bot-msg">Hello! Main Saathi hu, aapka apna AI companion. Aap yahan bina kisi jhijhak ke apne dil ki baat keh sakte hain.</div>
+        
+        <div class="mood-board" id="mood-board">
+            <p>Aaj aap kaisa feel kar rahe hain?</p>
+            <div class="emojis">
+                <span onclick="selectMood('Bahut Pareshan 😭')">😭</span>
+                <span onclick="selectMood('Thoda Udaas 😔')">😔</span>
+                <span onclick="selectMood('Theek hu 😐')">😐</span>
+                <span onclick="selectMood('Acha feel kar raha hu 🙂')">🙂</span>
+                <span onclick="selectMood('Bahut Khush 😄')">😄</span>
+            </div>
+        </div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Apni baat yahan likhein..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+    const chatBox = document.getElementById("chat-box");
+    const userInput = document.getElementById("user-input");
+    const moodBoard = document.getElementById("mood-board");
+
+    function appendMessage(sender, text) {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `message ${sender === 'user' ? 'user-msg' : 'bot-msg'}`;
+        msgDiv.innerText = text;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // Naya function jo emoji click hone par chalega
+    function selectMood(moodText) {
+        // Mood board ko hide kar do
+        moodBoard.style.display = 'none';
+        
+        // User ka message append karo
+        let fullMessage = `Mera mood aaj: ${moodText}`;
+        appendMessage("user", fullMessage);
+        
+        // Bot ko background mein bhejo
+        fetchBotResponse(fullMessage);
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === "Enter") sendMessage();
+    }
+
+    function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        // Agar user ne bina emoji dabaye text likh diya, toh bhi mood board hata do
+        if(moodBoard.style.display !== 'none') {
+            moodBoard.style.display = 'none';
+        }
+
+        appendMessage("user", text);
+        userInput.value = "";
+        fetchBotResponse(text);
+    }
+
+    async function fetchBotResponse(userText) {
+        const typingDiv = document.createElement("div");
+        typingDiv.className = "message bot-msg";
+        typingDiv.id = "typing-indicator";
+        typingDiv.innerText = "Saathi type kar raha hai...";
+        chatBox.appendChild(typingDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        try {
+            const response = await fetch("/get_response", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userText })
+            });
+            const data = await response.json();
+            
+            document.getElementById("typing-indicator").remove();
+            appendMessage("bot", data.reply);
+        } catch (error) {
+            document.getElementById("typing-indicator").remove();
+            appendMessage("bot", "Network error. Please try again.");
+        }
+    }
+</script>
+
+</body>
+</html>
