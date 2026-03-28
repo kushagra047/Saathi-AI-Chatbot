@@ -106,12 +106,19 @@ def register():
         password = request.form.get('password')
         
         # --- PROFESSIONAL VALIDATION START ---
-        # Rule: Min 6 chars, 1 Upper, 1 Lower, 1 Number, 1 Special
-        pattern = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
         
-        if not re.match(pattern, username):
-            flash('Username must be 6+ chars with A-Z, a-z, 0-9 & special char!', 'danger')
+        # 1. USERNAME VALIDATION: Only letters (A-Z, a-z) and numbers (0-9). Min 5 chars.
+        username_pattern = r"^[A-Za-z0-9]{5,}$"
+        if not re.match(username_pattern, username):
+            flash('Username can only contain letters and numbers (minimum 5 characters, no spaces or special symbols)!', 'danger')
             return redirect(url_for('register'))
+
+        # 2. PASSWORD VALIDATION: Min 6 chars, 1 Upper, 1 Lower, 1 Number, 1 Special
+        password_pattern = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
+        if not re.match(password_pattern, password):
+            flash('Password must be 6+ chars with A-Z, a-z, 0-9 & special char!', 'danger')
+            return redirect(url_for('register'))
+            
         # --- PROFESSIONAL VALIDATION END ---
 
         if User.query.filter_by(username=username).first():
